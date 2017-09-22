@@ -3,9 +3,55 @@ version 8
 __lua__
 
 function _init()
+	center = 64 -- Set the center of the screen, the starting point for each star
+	stars = 200 -- Number of stars to be generated
+	starx={} -- Create the x co-ordinates table for each star
+	stary={} -- Create the x co-ordinates table for each star
+	oldx = 0 -- Used to store x co-ordinates before they get animated
+	oldy = 0 -- Used to store x co-ordinates before they get animated
 	
+	x_vol = 0 -- These two variables are used to accelerate the randomly created points for each star
+	y_vol = 0
+	
+	
+	a=0.0001 -- This itty bitty number basiclly reduces the large random x,y positions to near zero and then slowly brings them up to the full number
+	
+	for i=1,stars do -- Generate the two co-orindate tables used to store each stars x and y
+		add(starx,((rnd(256)-128))) -- 256 - 128 gives us a resolution between positive 128 and negative 128 i.e. the size of our screen
+		add(stary,((rnd(256)-128)))
+	end
+	
+	star_array_x = {} -- Empty tables to populate with the final rendered pixel position
+	star_array_y = {}
 end
 
+function gen_stars() -- Called by _draw
+	for i=1, stars do -- Start the star loop
+		
+		x_vol+=rnd(3*a) -- Here's the magic for the star acceleration, an iterated tiny number that controls the speed of the stars
+		y_vol+=rnd(3*a)
+		
+		oldx = starx[i] -- Storing the original position of each star
+		oldy = stary[i]
+		
+		star_array_x[i] = center + (starx[i] * x_vol) /2 -- Putting all the calculations together to write each stars x and y
+		star_array_y[i] = center + (stary[i] * y_vol) /2
+
+		-- Do the 2nd star wave when each a point off screen
+		if(star_array_x[i]>128 or star_array_y[i]>128 or star_array_x[i] < 0 or star_array_y[i] < 0) then
+			x_vol+=rnd(1*a)
+			y_vol+=rnd(1*a)
+			starx[i] = rnd(256)-128
+			stary[i] = rnd(256)-128
+			starx[i]=oldx 
+			stary[i]=oldy 
+			star_array_x[i] = center + (starx[i] * x_vol) / 15
+			star_array_y[i] = center + (stary[i] * y_vol) / 15
+		end
+		
+		pset(star_array_x[i], star_array_y[i] , 7) -- write the pixels!
+	end	
+end
 
 
 function _update()
@@ -13,9 +59,9 @@ function _update()
 end
 
 function _draw()
-	cls()
+	cls()	
+	gen_stars()
 
-	
 end
 
 __gfx__
